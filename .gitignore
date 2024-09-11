@@ -4,8 +4,6 @@
 
 .env.prod
 
-/dist
-
 requests-templates.json
 
 project_info.txt

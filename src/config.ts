@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 
-const envFile = '.env.dev';
+const isProduction = process.env.NODE_ENV === 'production';
+
+const envFile = isProduction ? '.env.prod' : '.env.dev';
 
 config({ path: envFile });
 
