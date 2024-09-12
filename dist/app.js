@@ -23,4 +23,7 @@ app.use((0, cors_1.default)({
 }));
 app.use((0, cookie_parser_1.default)());
 mail_1.default.setApiKey(config_js_1.API_KEY);
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Hello world' });
+});
 app.use('/api/auth', auth_js_1.router);
