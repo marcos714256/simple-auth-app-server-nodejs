@@ -85,7 +85,7 @@ exports.verifyAccessToken = verifyAccessToken;
 const logout = async (req, res) => {
     try {
         res.cookie('auth_token', '', {
-            httpOnly: false,
+            httpOnly: true,
             secure: true,
             expires: new Date(0),
         });

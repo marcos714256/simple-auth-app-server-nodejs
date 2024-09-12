@@ -105,7 +105,7 @@ const verifyAccessToken = async (req: Request, res: Response): Promise<void> => 
 const logout = async (req: Request, res: Response) => {
   try {
     res.cookie('auth_token', '', {
-      httpOnly: false,
+      httpOnly: true,
       secure: true,
       expires: new Date(0),
     });
