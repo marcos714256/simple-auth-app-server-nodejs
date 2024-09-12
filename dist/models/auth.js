@@ -1,9 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
-// import mongoose from 'mongoose';
 const mongoose_1 = require("mongoose");
-const mongoose_2 = require("mongoose");
 const UserSchema = new mongoose_1.Schema({
     email: {
         type: String,
@@ -22,5 +19,5 @@ const UserSchema = new mongoose_1.Schema({
 }, {
     versionKey: false,
 });
-const User = (0, mongoose_2.model)('User', UserSchema, 'users');
-exports.User = User;
+const User = (0, mongoose_1.model)("User", UserSchema, "users");
+exports.default = User;

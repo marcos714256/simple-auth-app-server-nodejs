@@ -1,7 +1,5 @@
-// import mongoose from 'mongoose';
-import { Schema } from 'mongoose';
-import { model } from 'mongoose';
-import type { UserTypes } from '../interfaces/user';
+import { Schema, model } from "mongoose";
+import type { UserTypes } from "../interfaces/user";
 
 const UserSchema = new Schema<UserTypes>(
   {
@@ -22,9 +20,9 @@ const UserSchema = new Schema<UserTypes>(
   },
   {
     versionKey: false,
-  }
+  },
 );
 
-const User = model('User', UserSchema, 'users');
+const User = model("User", UserSchema, "users");
 
-export { User };
+export default User;
