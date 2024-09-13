@@ -29,7 +29,8 @@ const login = async (req, res) => {
     res.cookie('auth_token', token, {
         httpOnly: true,
         secure: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        maxAge: 16 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json({ message: 'Sesion iniciada' });
 };
