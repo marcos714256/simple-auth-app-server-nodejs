@@ -30,15 +30,11 @@ const login = async (req: Request, res: Response) => {
 
   const token = await generateToken({ userId: userFound._id });
 
-  res.header('Authorization', `Bearer ${token}`);
-
   res.cookie('auth_token', token, {
     httpOnly: true,
     secure: true,
     sameSite: 'strict',
   });
-
-  // process.env.NODE_ENV === "production"
 
   res.status(200).json({ message: 'Sesion iniciada' });
 };
@@ -69,28 +65,24 @@ const register = async (req: Request, res: Response) => {
 
   const token = await generateToken({ userId: userSaved._id });
 
-  console.log('token:', token);
-
   res.cookie('auth_token', token, {
     httpOnly: true,
     secure: true,
     sameSite: 'strict',
   });
 
-  // process.env.NODE_ENV === "production"
-
   res.status(200).json({ message: 'Cuenta creada' });
 };
 
 const verifyAccessToken = async (req: Request, res: Response): Promise<void> => {
-  const userToken = req.cookies['auth_token'];
+  const token = req.cookies.auth_token;
 
-  if (!userToken) {
+  if (!token) {
     res.status(401).json({ message: 'Token no encontrado.' });
     return;
   }
 
-  jwt.verify(userToken, SECRET_KEY, async (error: any, user: any) => {
+  jwt.verify(token, SECRET_KEY, async (error: any, user: any) => {
     if (error) return res.sendStatus(401);
 
     const userFound = await User.findById(user.userId);
@@ -113,8 +105,6 @@ const logout = async (req: Request, res: Response) => {
       sameSite: 'strict',
       expires: new Date(0),
     });
-
-    // process.env.NODE_ENV === "production"
 
     res.status(200).json({ message: 'Sesion cerrada' });
   } catch (error) {

@@ -26,13 +26,11 @@ const login = async (req, res) => {
         return jsonwebtoken_1.default.sign(payload, config_1.SECRET_KEY, { expiresIn: '16d' });
     };
     const token = await generateToken({ userId: userFound._id });
-    res.header('Authorization', `Bearer ${token}`);
     res.cookie('auth_token', token, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
     });
-    // process.env.NODE_ENV === "production"
     res.status(200).json({ message: 'Sesion iniciada' });
 };
 exports.login = login;
@@ -54,23 +52,21 @@ const register = async (req, res) => {
         return jsonwebtoken_1.default.sign(payload, config_1.SECRET_KEY, { expiresIn: '16d' });
     };
     const token = await generateToken({ userId: userSaved._id });
-    console.log('token:', token);
     res.cookie('auth_token', token, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
     });
-    // process.env.NODE_ENV === "production"
     res.status(200).json({ message: 'Cuenta creada' });
 };
 exports.register = register;
 const verifyAccessToken = async (req, res) => {
-    const userToken = req.cookies['auth_token'];
-    if (!userToken) {
+    const token = req.cookies.auth_token;
+    if (!token) {
         res.status(401).json({ message: 'Token no encontrado.' });
         return;
     }
-    jsonwebtoken_1.default.verify(userToken, config_1.SECRET_KEY, async (error, user) => {
+    jsonwebtoken_1.default.verify(token, config_1.SECRET_KEY, async (error, user) => {
         if (error)
             return res.sendStatus(401);
         const userFound = await auth_1.default.findById(user.userId);
@@ -92,7 +88,6 @@ const logout = async (req, res) => {
             sameSite: 'strict',
             expires: new Date(0),
         });
-        // process.env.NODE_ENV === "production"
         res.status(200).json({ message: 'Sesion cerrada' });
     }
     catch (error) {
