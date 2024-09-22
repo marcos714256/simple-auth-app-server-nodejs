@@ -1,162 +1,200 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.logout = exports.verifyAccessToken = exports.register = exports.login = void 0;
-const bcrypt_1 = require("bcrypt");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const mail_1 = __importDefault(require("@sendgrid/mail"));
-const config_1 = require("../config");
-const auth_1 = __importDefault(require("../models/auth"));
-const login = async (req, res) => {
-    const { email, password } = req.body;
-    const userFound = await auth_1.default.findOne({ email });
-    if (!userFound) {
-        // "Este usuario no existe."
-        res.status(400).json({ message: 'Contraseña incorrecta.' });
-        return;
-    }
-    const isMatch = await (0, bcrypt_1.compare)(password, userFound.password);
-    if (!isMatch) {
-        res.status(400).json({ message: 'Contraseña incorrecta.' });
-        return;
-    }
-    const generateToken = async (payload) => {
-        return jsonwebtoken_1.default.sign(payload, config_1.SECRET_KEY, { expiresIn: '16d' });
-    };
-    const token = await generateToken({ userId: userFound._id });
-    res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 16 * 24 * 60 * 60 * 1000,
-    });
-    res.status(200).json({ message: 'Sesion iniciada' });
-};
-exports.login = login;
+import { compare, hash } from "bcrypt";
+import jwt from "jsonwebtoken";
+import sgMail from "@sendgrid/mail";
+import { z } from "zod";
+import { SECRET_KEY, TOKEN_NAME, CLIENT_URL } from "../config.js";
+import User from "../models/auth.js";
+import { registerSchema, loginSchema, resetPasswordSchema } from "../schemas/auth.js";
+import { clientMessages } from "../constans.js";
 const register = async (req, res) => {
     const { email, password, name } = req.body;
-    const userFound = await auth_1.default.findOne({ email });
-    if (userFound) {
-        res.status(400).json({ message: 'Esta cuenta ya existe.' });
-        return;
+    try {
+        registerSchema.parse({ email, password, name });
+        const userFound = await User.findOne({ email });
+        if (userFound) {
+            res.status(400).json({ message: clientMessages.accountAlreadyExists });
+            return;
+        }
+        const passwordHash = await hash(password, 10);
+        const newUser = new User({
+            email,
+            password: passwordHash,
+            name,
+        });
+        const userSaved = await newUser.save();
+        const generateAccessToken = async (payload) => {
+            return jwt.sign(payload, SECRET_KEY, { expiresIn: "16d" });
+        };
+        const token = await generateAccessToken({ id: userSaved._id });
+        res.cookie(TOKEN_NAME, token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 16 * 24 * 60 * 60 * 1000,
+        });
+        res.status(200).json({ message: clientMessages.registerSuccess });
     }
-    const passwordHash = await (0, bcrypt_1.hash)(password, 0);
-    const newUser = new auth_1.default({
-        email,
-        password: passwordHash,
-        name,
-    });
-    const userSaved = await newUser.save();
-    const generateToken = async (payload) => {
-        return jsonwebtoken_1.default.sign(payload, config_1.SECRET_KEY, { expiresIn: '16d' });
-    };
-    const token = await generateToken({ userId: userSaved._id });
-    res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        maxAge: 16 * 24 * 60 * 60 * 1000,
-    });
-    res.status(200).json({ message: 'Cuenta creada' });
+    catch (e) {
+        if (e instanceof z.ZodError) {
+            console.error(e.errors.map((e) => e.message));
+            return res.status(400).json({
+                message: clientMessages.invalidData,
+            });
+        }
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
+    }
 };
-exports.register = register;
+const login = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        loginSchema.parse({ email, password });
+        const userFound = await User.findOne({ email });
+        if (!userFound) {
+            res.status(400).json({ message: clientMessages.accountnotFound });
+            return;
+        }
+        const isMatch = await compare(password, userFound.password);
+        if (!isMatch) {
+            res.status(400).json({ message: clientMessages.incorrectPassword });
+            return;
+        }
+        const generateAccessToken = async (payload) => {
+            return jwt.sign(payload, SECRET_KEY, { expiresIn: "16d" });
+        };
+        const token = await generateAccessToken({ id: userFound._id });
+        res.cookie(TOKEN_NAME, token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 16 * 24 * 60 * 60 * 1000,
+        });
+        res.status(200).json({ message: clientMessages.loginSuccess });
+    }
+    catch (e) {
+        if (e instanceof z.ZodError) {
+            console.error(e.errors.map((e) => e.message));
+            return res.status(400).json({
+                message: clientMessages.invalidData,
+            });
+        }
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
+    }
+};
 const verifyAccessToken = async (req, res) => {
     const token = req.cookies.auth_token;
     if (!token) {
-        res.status(401).json({ message: 'Token no encontrado.' });
+        res.status(401).json({ message: clientMessages.authError });
         return;
     }
-    jsonwebtoken_1.default.verify(token, config_1.SECRET_KEY, async (error, user) => {
-        if (error)
-            return res.sendStatus(401);
-        const userFound = await auth_1.default.findById(user.userId);
-        if (!userFound)
-            return res.status(400).json({ message: 'Usuario no encontrado' });
-        return res.json({
-            userId: userFound._id,
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (typeof decoded === "string")
+            return console.log("String");
+        const userFound = await User.findById(decoded.id);
+        if (!userFound) {
+            res.status(400).json({ message: clientMessages.accountnotFound });
+            return;
+        }
+        return res.status(200).json({
+            id: userFound._id,
             name: userFound.name,
             email: userFound.email,
         });
-    });
+    }
+    catch (e) {
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
+    }
 };
-exports.verifyAccessToken = verifyAccessToken;
 const logout = async (req, res) => {
     try {
-        res.cookie('auth_token', '', {
+        res.cookie(TOKEN_NAME, "", {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: "none",
             expires: new Date(0),
         });
-        res.status(200).json({ message: 'Sesion cerrada' });
+        res.status(200).json({ message: clientMessages.logoutSuccess });
     }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(500).json({ error: 'Error interno del servidor' });
-        }
+    catch (e) {
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
     }
 };
-exports.logout = logout;
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
-    const userFound = await auth_1.default.findOne({ email });
-    if (!userFound) {
-        res.status(400).json({ error: 'Esta cuenta no existe.' });
-        return;
-    }
-    const generateToken = async (payload) => {
-        return jsonwebtoken_1.default.sign(payload, config_1.SECRET_KEY, { expiresIn: '1h' });
-    };
-    const token = await generateToken({ userId: userFound._id });
-    const resetLink = `http://localhost:5500/reset-password.html?token=${token}`;
-    const msg = {
-        to: email,
-        from: 'destructordemundos3@outlook.com',
-        subject: 'Restablecer contraseña',
-        html: `
-      <h1>Restablece tu contraseña</h1>
-      <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-      <a href="${resetLink}">Restablecer contraseña</a>
-      <p>Este enlace es válido por 1 hora.</p>
-    `,
-    };
     try {
-        await mail_1.default.send(msg);
-        res.status(200).json({ message: 'Enlace enviado' });
+        const userFound = await User.findOne({ email });
+        if (!userFound) {
+            res.status(400).json({ message: clientMessages.accountnotFound });
+            return;
+        }
+        const generateAccessToken = async (payload) => {
+            return jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+        };
+        const token = await generateAccessToken({ id: userFound._id });
+        const resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`;
+        const msg = {
+            to: email,
+            from: "destructordemundos3@outlook.com",
+            subject: "Restablecer contraseña",
+            html: `
+        <h1>Restablece tu contraseña</h1>
+        <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+        <a href="${resetLink}">Restablecer contraseña</a>
+        <p>Este enlace es válido por 1 hora.</p>
+      `,
+        };
+        await sgMail.send(msg);
+        res.status(200).json({ message: clientMessages.linkSent });
     }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al enviar el correo' });
+    catch (e) {
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
     }
 };
-exports.forgotPassword = forgotPassword;
 const resetPassword = async (req, res) => {
-    const newPassword = req.body.newPassword;
-    const token = req.headers['authorization']?.split(' ')[1];
-    try {
-        const decoded = jsonwebtoken_1.default.verify(token, config_1.SECRET_KEY);
-        const userFound = await auth_1.default.findById(decoded.userId);
-        if (userFound !== null) {
-            const isMatch = await (0, bcrypt_1.compare)(newPassword, userFound.password);
-            if (isMatch) {
-                res.status(400).json({ error: 'Esta contraseña ya esta en uso.' });
-                return;
-            }
-        }
-        const passwordHash = await (0, bcrypt_1.hash)(newPassword, 0);
-        try {
-            await auth_1.default.findByIdAndUpdate(decoded.userId, { password: passwordHash }, { new: true });
-            res.status(200).json({ message: 'Contraseña restablecida' });
-        }
-        catch (error) {
-            res.status(500).json({ error: 'Error' });
-        }
+    const { newPassword, confirmNewPassword } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: clientMessages.authError });
     }
-    catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Error' });
+    try {
+        resetPasswordSchema.parse({ newPassword, confirmNewPassword });
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (typeof decoded === "string") {
+            res.status(404).json({ message: clientMessages.unknownError });
+            return;
+        }
+        const userFound = await User.findById(decoded.id);
+        if (!userFound) {
+            res.status(400).json({ message: clientMessages.unknownError });
+            return;
+        }
+        const isMatch = await compare(newPassword, userFound.password);
+        if (isMatch) {
+            res.status(400).json({ message: clientMessages.passwordIsMatch });
+            return;
+        }
+        const passwordHash = await hash(newPassword, 10);
+        await User.findByIdAndUpdate(decoded.id, { password: passwordHash }, { new: true });
+        return res.status(200).json({ message: clientMessages.passwordResetSuccess });
+    }
+    catch (e) {
+        if (e instanceof z.ZodError) {
+            console.error(e.errors.map((e) => e.message));
+            return res.status(400).json({
+                message: clientMessages.invalidData,
+            });
+        }
+        if (e instanceof jwt.JsonWebTokenError) {
+            console.error(e);
+            return res.status(401).json({ message: clientMessages.invalidToken });
+        }
+        console.error(e);
+        res.status(500).json({ message: clientMessages.unknownError });
     }
 };
-exports.resetPassword = resetPassword;
+export { register, login, verifyAccessToken, logout, forgotPassword, resetPassword };
