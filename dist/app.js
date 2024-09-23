@@ -17,8 +17,5 @@ app.use(cors({
 app.use(cookieParser());
 sgMail.setApiKey(API_KEY);
 app.use(helmet());
-// app.get('/', (req, res) => {
-//   res.status(200).json({ message: 'Hello world' });
-// });
 app.use("/api/auth", auth);
 export default app;

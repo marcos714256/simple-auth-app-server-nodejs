@@ -5,8 +5,8 @@ const connectDB = async () => {
         await connect(DB_URL);
         console.log("Connected to DB");
     }
-    catch (error) {
-        console.log("error:", error);
+    catch (e) {
+        console.error(e);
     }
 };
 export default connectDB;

@@ -7,8 +7,8 @@ const main = async () => {
         app.listen(PORT);
         console.log(`Entorno: ${process.env.NODE_ENV}`);
     }
-    catch (error) {
-        console.log(error);
+    catch (e) {
+        console.error(e);
     }
 };
 main();
