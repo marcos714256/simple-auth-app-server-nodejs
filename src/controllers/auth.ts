@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 import sgMail from "@sendgrid/mail"
 import { z } from "zod"
 
-import { SECRET_KEY, TOKEN_NAME, CLIENT_URL } from "../config.js"
+import { SECRET_KEY, TOKEN_NAME, CLIENT_URL, IS_GITHUB_REPO, GITHUB_REPO_LINK } from "../config.js"
 import User from "../models/auth.js"
 import { registerSchema, loginSchema, resetPasswordSchema } from "../schemas/auth.js"
 import { clientMessages } from "../constans.js"
@@ -158,6 +158,8 @@ const logout = async (req: Request, res: Response) => {
 const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body
 
+  let resetLink
+
   try {
     const userFound = await User.findOne({ email })
 
@@ -172,7 +174,11 @@ const forgotPassword = async (req: Request, res: Response) => {
 
     const token = await generateAccessToken({ id: userFound._id })
 
-    const resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`
+    if (IS_GITHUB_REPO) {
+      resetLink = `${CLIENT_URL}${GITHUB_REPO_LINK}/reset-password.html?token=${token}`  
+    } else {
+      resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`
+    }
 
     const msg = {
       to: email,
