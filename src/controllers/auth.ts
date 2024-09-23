@@ -175,7 +175,7 @@ const forgotPassword = async (req: Request, res: Response) => {
     const token = await generateAccessToken({ id: userFound._id })
 
     if (IS_GITHUB_REPO) {
-      resetLink = `${CLIENT_URL}${GITHUB_REPO_LINK}/reset-password.html?token=${token}`  
+      resetLink = `${CLIENT_URL}/${GITHUB_REPO_LINK}/reset-password.html?token=${token}`  
     } else {
       resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`
     }
