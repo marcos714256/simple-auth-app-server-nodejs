@@ -9,11 +9,13 @@ import auth from "./routes/auth.js";
 const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(cors({
+app.use(
+  cors({
     origin: CLIENT_URL,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  })
+);
 app.use(cookieParser());
 sgMail.setApiKey(API_KEY);
 app.use(helmet());

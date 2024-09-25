@@ -1,14 +1,14 @@
-import { connect } from "mongoose"
+import { connect } from "mongoose";
 
-import { DB_URL } from "../config.js"
+import { DB_URL } from "../config.js";
 
 const connectDB = async (): Promise<void> => {
   try {
-    await connect(DB_URL)
-    console.log("Connected to DB")
+    await connect(DB_URL);
+    console.log("Connected to DB");
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
-}
+};
 
-export default connectDB
+export default connectDB;

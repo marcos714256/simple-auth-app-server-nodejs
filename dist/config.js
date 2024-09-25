@@ -9,5 +9,5 @@ const DB_URL = process.env.DB_URL;
 const PORT = process.env.PORT;
 const TOKEN_NAME = process.env.TOKEN_NAME;
 const IS_GITHUB_REPO = process.env.IS_GITHUB_REPO;
-const GITHUB_REPO_LINK = process.env.TOKEN_NAME;
+const GITHUB_REPO_LINK = process.env.GITHUB_REPO_LINK;
 export { CLIENT_URL, API_KEY, SECRET_KEY, DB_URL, PORT, TOKEN_NAME, IS_GITHUB_REPO, GITHUB_REPO_LINK };

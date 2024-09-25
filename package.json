@@ -1,17 +1,15 @@
 {
-  "name": "simple-login-and-register-full-stack-app-node",
+  "name": "simple-auth-app-server-nodejs",
   "version": "1.0.0",
   "main": "./dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "set NODE_ENV=development && npx nodemon ./dist/server.js",
-    "prod": "set NODE_ENV=production && npx node ./dist/server.js",
+    "build:prod": "set NODE_ENV=production && npx node ./dist/server.js",
+    "build:dev": "npx tsc",
+    "start": "set NODE_ENV=development && npx nodemon ./dist/server.js",
+    "lint": "npx eslint .",
     "format": "npx prettier --write ."
   },
-  "keywords": [],
-  "author": "chris",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@sendgrid/mail": "^8.1.3",
     "bcrypt": "^5.1.1",
