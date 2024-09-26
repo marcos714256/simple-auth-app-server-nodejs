@@ -4,9 +4,9 @@
   "main": "./dist/server.js",
   "type": "module",
   "scripts": {
-    "build:prod": "set NODE_ENV=production && npx node ./dist/server.js",
-    "build:dev": "npx tsc",
-    "start": "set NODE_ENV=development && npx nodemon ./dist/server.js",
+    "compile": "npx tsc",
+    "start:prod": "set NODE_ENV=production && npx node ./dist/server.js",
+    "start:dev": "set NODE_ENV=development && npx nodemon ./dist/server.js",
     "lint": "npx eslint .",
     "format": "npx prettier --write ."
   },
