@@ -8,4 +8,10 @@ interface UserTypes {
   _id: string;
 }
 
-export { UserTypes };
+interface RegisterTypes {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export { UserTypes, RegisterTypes };

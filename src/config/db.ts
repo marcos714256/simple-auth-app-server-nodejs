@@ -1,6 +1,6 @@
 import { connect } from "mongoose";
 
-import { DB_URL } from "../config.js";
+import { DB_URL } from "./env.js";
 
 const connectDB = async (): Promise<void> => {
   try {
