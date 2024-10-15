@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { compare, hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import sgMail from "@sendgrid/mail";
@@ -6,15 +6,19 @@ import { z } from "zod";
 
 import { SECRET_KEY, TOKEN_NAME, CLIENT_URL, IS_GITHUB_REPO, GITHUB_REPO_LINK } from "./config/env.js";
 import User from "./model.js";
-import { loginSchema, resetPasswordSchema } from "./schema.js";
-import { CLIENT_ERROR_MESSAGES, CLIENT_SUCCES_MESSAGES } from "./constant.js";
-import { registerUser } from "./service.js"
+import { loginSchema, resetPasswordSchema } from "./schemas.js";
+import { CLIENT_ERROR_MESSAGES, CLIENT_SUCCES_MESSAGES } from "./constants.js";
+import { registerUser } from "./services.js";
+import { generateAccessToken } from "./utils/jwt.js";
+// import { decodedTokenTypes } from "./interfaces.js";
 
-const register = async (req: Request, res: Response) => {
+const register = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password, name } = req.body;
 
   try {
-    const token = await registerUser({ email, password, name });
+    const userSaved = await registerUser({ email, password, name });
+
+    const token = await generateAccessToken({ id: userSaved._id });
 
     res.cookie(TOKEN_NAME, token, {
       httpOnly: true,
@@ -25,16 +29,7 @@ const register = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.registerSuccess });
   } catch (e) {
-    if (e instanceof z.ZodError) {
-      console.error(e.errors.map((e) => e.message));
-
-      return res.status(400).json({
-        message: CLIENT_ERROR_MESSAGES.invalidData,
-      });
-    }
-
-    console.error(e);
-    res.status(500).json({ message: CLIENT_ERROR_MESSAGES.unknownError });
+    next(e);
   }
 };
 
@@ -47,7 +42,7 @@ const login = async (req: Request, res: Response) => {
     const userFound = await User.findOne({ email });
 
     if (!userFound) {
-      res.status(400).json({ message: CLIENT_ERROR_MESSAGES.accountnotFound });
+      res.status(400).json({ message: CLIENT_ERROR_MESSAGES.accountNotFound });
       return;
     }
 
@@ -86,36 +81,29 @@ const login = async (req: Request, res: Response) => {
   }
 };
 
-const verifyAccessToken = async (req: Request, res: Response) => {
-  const token = req.cookies.auth_token;
+// Eliminar, ya hay un middleware para esto
+// const verifyRefreshToken = async (req: Request, res: Response, next: NextFunction) => {};
 
-  if (!token) {
-    res.status(401).json({ message: CLIENT_ERROR_MESSAGES.authError });
-    return;
-  }
+// Eliminar, ya hay un middleware para esto
+// const verifyAccessToken = async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const token = req.cookies.auth_access_token;
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+//     const decoded = (await verifyToken(token)) as decodedTokenTypes;
 
-    if (typeof decoded === "string") return console.log("String");
+//     const userFound = await User.findById(decoded.id);
 
-    const userFound = await User.findById(decoded.id);
+//     if (!userFound) return res.status(404).json({ message: CLIENT_ERROR_MESSAGES.accountNotFound });
 
-    if (!userFound) {
-      res.status(400).json({ message: CLIENT_ERROR_MESSAGES.accountnotFound });
-      return;
-    }
-
-    return res.status(200).json({
-      id: userFound._id,
-      name: userFound.name,
-      email: userFound.email,
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: CLIENT_ERROR_MESSAGES.unknownError });
-  }
-};
+//     return res.status(200).json({
+//       id: userFound._id,
+//       name: userFound.name,
+//       email: userFound.email,
+//     });
+//   } catch (e) {
+//     next(e);
+//   }
+// };
 
 const logout = async (req: Request, res: Response) => {
   try {
@@ -142,7 +130,7 @@ const forgotPassword = async (req: Request, res: Response) => {
     const userFound = await User.findOne({ email });
 
     if (!userFound) {
-      res.status(400).json({ message: CLIENT_ERROR_MESSAGES.accountnotFound });
+      res.status(400).json({ message: CLIENT_ERROR_MESSAGES.accountNotFound });
       return;
     }
 
@@ -234,4 +222,4 @@ const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, verifyAccessToken, logout, forgotPassword, resetPassword };
+export { register, login, verifyAccessToken, logout, forgotPassword, resetPassword, verifyRefreshToken };

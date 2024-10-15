@@ -6,7 +6,7 @@
   "scripts": {
     "compile": "npx tsc",
     "start:prod": "set NODE_ENV=production && npx node ./dist/app.js",
-    "start:dev": "set NODE_ENV=development && npx nodemon --exec ts-node ./dist/app.js",
+    "start:dev": "set NODE_ENV=development && npx nodemon ./src/app.ts",
     "lint": "npx eslint .",
     "format": "npx prettier --write ."
   },
@@ -38,7 +38,8 @@
     "nodemon": "^3.1.4",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
     "typescript-eslint": "^8.5.0"
   }
 }

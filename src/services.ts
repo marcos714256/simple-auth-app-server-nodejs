@@ -1,13 +1,9 @@
-import { generateAccessToken } from "./utils/jwt.js";
 import User from "./model.js";
-import { registerSchema } from "./schema.js";
-import { CLIENT_ERROR_MESSAGES } from "./constant.js";
-import { RegisterTypes } from "./interface.js";
+import { CLIENT_ERROR_MESSAGES } from "./constants.js";
+import { RegisterTypes } from "./interfaces.js";
 import { hashPassword } from "./utils/bcrypt.js";
 
 const registerUser = async ({ email, password, name }: RegisterTypes) => {
-  registerSchema.parse({ email, password, name });
-
   const userFound = await User.findOne({ email });
 
   if (userFound) {
@@ -24,9 +20,7 @@ const registerUser = async ({ email, password, name }: RegisterTypes) => {
 
   const userSaved = await newUser.save();
 
-  const token = await generateAccessToken({ id: userSaved._id });
-
-  return token
+  return userSaved;
 };
 
 export { registerUser };

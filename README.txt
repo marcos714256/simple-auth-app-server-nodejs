@@ -1,0 +1,1 @@
+Solo se utiliza "throw new Error" para errores criticos

@@ -1,13 +1,15 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sgMail from "@sendgrid/mail";
 import helmet from "helmet";
 
-import { CLIENT_URL, API_KEY, PORT } from "./config/env.js";
-import auth from "./route.js";
+import { CLIENT_URL, SENDGRID_API_KEY, PORT } from "./config/env.js";
+import authRoutes from "./routes.js";
 import connectDB from "./config/db.js";
+import handleError from "./middlewares/errorHandler.js";
+import verifyAuth from "./middlewares/authVerify.js";
 
 const app = express();
 
@@ -21,16 +23,22 @@ app.use(
   })
 );
 app.use(cookieParser());
-sgMail.setApiKey(API_KEY);
+sgMail.setApiKey(SENDGRID_API_KEY);
 app.use(helmet());
 
-app.use("/api", auth);
+app.use("/api", authRoutes);
+app.use(verifyAuth)
+app.use(handleError);
 
-// await connectDB()
+app.all("*", (req: Request, res: Response) => {
+  return res.status(404).json({ message: `Ruta ${req.originalUrl} no encontrada` });
+});
 
-// app.listen(PORT, () => {
-//   console.log("Servidor iniciado");
-// })
+process.on("uncaughtException", (e) => {
+  console.error(e);
+  console.log("Fin del programa.");
+  process.exit(1);
+});
 
 const startServer = async () => {
   try {
@@ -45,19 +53,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-// export default app;
-
-// import app from "./app.js";
-
-// const main = async () => {
-//   try {
-//     await connectDB();
-//     app.listen(PORT);
-//     console.log(`Entorno: ${process.env.NODE_ENV}`);
-//   } catch (e) {
-//     console.error(e);
-//   }
-// };
-
-// main();

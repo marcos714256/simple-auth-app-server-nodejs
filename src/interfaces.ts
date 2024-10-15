@@ -14,4 +14,10 @@ interface RegisterTypes {
   name: string;
 }
 
-export { UserTypes, RegisterTypes };
+interface decodedTokenTypes {
+  id: string;
+  iat: number;
+  exp: number;
+}
+
+export { UserTypes, RegisterTypes, decodedTokenTypes };

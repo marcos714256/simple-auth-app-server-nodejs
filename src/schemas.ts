@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CLIENT_ERROR_MESSAGES } from "./constant.js";
+import { CLIENT_ERROR_MESSAGES } from "./constants.js";
 
 const registerSchema = z.object({
   name: z.string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired }),

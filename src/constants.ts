@@ -12,7 +12,7 @@ const CLIENT_ERROR_MESSAGES = {
   loginError: "Error al iniciar sesion.",
   userNotFound: "Este usuario no existe.",
   incorrectPassword: "Contraseña incorrecta.",
-  accountnotFound: "Esta cuenta no existe.",
+  accountNotFound: "Esta cuenta no existe.",
   passwordIsMatch: "Esta contraseña ya esta en uso.",
   fieldRequired: "Este campo es obligatorio.",
   invalidPasswordLength: "Longitud de contraseña inválida.",
@@ -22,6 +22,7 @@ const CLIENT_ERROR_MESSAGES = {
   authError: "Error de autenticacion.",
   expiredSession: "Sesion expirada, porfavor vuelve a iniciar sesion",
   passwordNotMath: "Las contraseñas no coinciden.",
+  tokenNotFound: "Token no encontrado",
 };
 
 export { CLIENT_SUCCES_MESSAGES, CLIENT_ERROR_MESSAGES };
