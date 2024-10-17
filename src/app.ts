@@ -9,7 +9,7 @@ import { CLIENT_URL, SENDGRID_API_KEY, PORT } from "./config/env.js";
 import authRoutes from "./routes.js";
 import connectDB from "./config/db.js";
 import handleError from "./middlewares/errorHandler.js";
-import verifyAuth from "./middlewares/authVerify.js";
+// import verifyAuth from "./middlewares/accessTokenVerify.js";
 
 const app = express();
 
@@ -27,7 +27,7 @@ sgMail.setApiKey(SENDGRID_API_KEY);
 app.use(helmet());
 
 app.use("/api", authRoutes);
-app.use(verifyAuth)
+// app.use(verifyAuth)
 app.use(handleError);
 
 app.all("*", (req: Request, res: Response) => {

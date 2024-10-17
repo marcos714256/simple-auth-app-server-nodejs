@@ -13,8 +13,8 @@ const IS_GITHUB_REPO = process.env.IS_GITHUB_REPO as string;
 const GITHUB_REPO_NAME = process.env.GITHUB_REPO_NAME as string;
 const JWT_REFRESH_SECRET_KEY = process.env.JWT_REFRESH_SECRET_KEY as string;
 const JWT_ACCESS_SECRET_KEY = process.env.JWT_ACCESS_SECRET_KEY as string;
-const JWT_REFRESH_TOKEN_NAME = process.env.JWT_REFRESH_SECRET_NAME as string;
-const JWT_ACCESS_TOKEN_NAME = process.env.JWT_ACCESS_SECRET_NAME as string;
+const JWT_REFRESH_TOKEN_NAME = process.env.JWT_REFRESH_TOKEN_NAME as string;
+const JWT_ACCESS_TOKEN_NAME = process.env.JWT_ACCESS_TOKEN_NAME as string;
 
 export {
   CLIENT_URL,
