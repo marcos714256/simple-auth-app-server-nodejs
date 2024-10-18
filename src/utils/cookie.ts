@@ -8,7 +8,7 @@ const setAuthCookie = (res: Response, name: string, value: string, maxAgeString:
   if (maxAgeString === "1h") maxAgeNumber = 1 * 60 * 60 * 1000;
   if (maxAgeString === "7d") maxAgeNumber = 7 * 24 * 60 * 60 * 1000;
 
-  console.log(maxAgeNumber)
+  // console.log(maxAgeNumber)
 
   const cookieOptions = {
     httpOnly: process.env.NODE_ENV !== "development",

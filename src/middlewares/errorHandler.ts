@@ -6,13 +6,12 @@ import AppError from "../utils/appError";
 
 const handleError = (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ZodError) {
-    return next();
+    next();
   } else if (err instanceof jwt.JsonWebTokenError) {
-    // console.error(err);
-    return res.status(401).json({ error: CLIENT_ERROR_MESSAGES.authError });
+    res.status(401).json({ error: CLIENT_ERROR_MESSAGES.authError });
   } else if (err instanceof AppError) {
     console.error(err);
-    return res.status(err.statusCode).json({ error: err.getMessage() });
+    res.status(err.statusCode).json({ error: err.getMessage() });
   }
 };
 

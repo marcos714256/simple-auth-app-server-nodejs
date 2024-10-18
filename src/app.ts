@@ -4,11 +4,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import sgMail from "@sendgrid/mail";
 import helmet from "helmet";
+import { connect } from "mongoose";
 
-import { CLIENT_URL, SENDGRID_API_KEY, PORT } from "./config/env.js";
+import { CLIENT_URL, SENDGRID_API_KEY, PORT, DB_URL } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
-import connectDB from "./config/db.js";
-import handleError from "./middlewares/errorHandler.js";
+import errorHandler from "./middlewares/errorHandler.js";
 import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
@@ -28,7 +28,7 @@ app.use(helmet());
 
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
-app.use(handleError);
+app.use(errorHandler);
 
 app.all("*", (req: Request, res: Response) => {
   return res.status(404).json({ error: `Ruta ${req.originalUrl} no encontrada` });
@@ -42,7 +42,9 @@ process.on("uncaughtException", (e) => {
 
 const startServer = async () => {
   try {
-    await connectDB();
+    await connect(DB_URL);
+
+    console.log("Connected to DB");
 
     app.listen(PORT, () => {
       console.log("Servidor iniciado");
