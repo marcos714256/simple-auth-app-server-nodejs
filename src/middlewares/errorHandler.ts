@@ -10,7 +10,6 @@ const handleError = (err: any, req: Request, res: Response, next: NextFunction) 
   } else if (err instanceof jwt.JsonWebTokenError) {
     res.status(401).json({ error: CLIENT_ERROR_MESSAGES.authError });
   } else if (err instanceof AppError) {
-    console.error(err);
     res.status(err.statusCode).json({ error: err.getMessage() });
   }
 };

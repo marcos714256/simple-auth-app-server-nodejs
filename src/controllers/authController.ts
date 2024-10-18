@@ -5,6 +5,9 @@ import {
   JWT_ACCESS_TOKEN_NAME,
   JWT_REFRESH_SECRET_KEY,
   JWT_REFRESH_TOKEN_NAME,
+  REFRESH_TOKEN_COOKIE_EXPIRE_TIME,
+  ACCESS_TOKEN_COOKIE_EXPIRE_TIME
+
 } from "../config/env.js";
 import { CLIENT_SUCCES_MESSAGES } from "../constants.js";
 import { validateUser, registerUser, sendResetLink, resetUserPassword } from "../services/authServices.js";
@@ -23,8 +26,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = await generateAccessToken({ id: userSaved._id }, JWT_ACCESS_SECRET_KEY);
     const refreshToken = await generateRefreshToken({ id: userSaved._id }, JWT_REFRESH_SECRET_KEY);
 
-    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
-    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.registerSuccess });
   } catch (e) {
@@ -44,8 +47,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
     const refreshToken = await generateRefreshToken({ id: userFound._id }, JWT_REFRESH_SECRET_KEY);
 
-    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
-    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.loginSuccess });
   } catch (e) {
@@ -86,8 +89,8 @@ const resetPassword = async (req: Request, res: Response, next: NextFunction) =>
     const accessToken = await generateAccessToken({ id: userReset._id }, JWT_ACCESS_SECRET_KEY);
     const refreshToken = await generateRefreshToken({ id: userReset._id }, JWT_REFRESH_SECRET_KEY);
 
-    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
-    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     return res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.passwordResetSuccess });
   } catch (e) {

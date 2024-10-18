@@ -3,31 +3,37 @@ import { z } from "zod";
 import { CLIENT_ERROR_MESSAGES } from "./constants.js";
 
 const registerSchema = z.object({
-  name: z.string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired }),
+  name: z.string({ required_error: CLIENT_ERROR_MESSAGES.nameFieldRequired }),
   email: z
-    .string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired })
+    .string({ required_error: CLIENT_ERROR_MESSAGES.emailFieldRequired })
     .email({ message: CLIENT_ERROR_MESSAGES.invalidMail }),
   password: z
-    .string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired })
+    .string({ required_error: CLIENT_ERROR_MESSAGES.passwordFieldRequired })
     .min(8, { message: CLIENT_ERROR_MESSAGES.invalidPasswordLength }),
 });
 
 const loginSchema = z.object({
-  email: z.string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired }),
-  password: z.string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired }),
+  email: z.string({ required_error: CLIENT_ERROR_MESSAGES.emailFieldRequired }),
+  password: z.string({ required_error: CLIENT_ERROR_MESSAGES.passwordFieldRequired }),
 });
 
 const resetPasswordSchema = z
   .object({
     newPassword: z
-      .string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired })
+      .string({ required_error: CLIENT_ERROR_MESSAGES.passwordFieldRequired })
       .min(8, { message: CLIENT_ERROR_MESSAGES.invalidPasswordLength }),
 
-    confirmNewPassword: z.string({ required_error: CLIENT_ERROR_MESSAGES.fieldRequired }),
+    confirmNewPassword: z.string({ required_error: CLIENT_ERROR_MESSAGES.newPasswordFieldRequired }),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
     message: CLIENT_ERROR_MESSAGES.passwordNotMath,
     path: ["confirmNewPassword"],
   });
 
-export { registerSchema, loginSchema, resetPasswordSchema };
+const forgotPasswordSchema = z.object({
+  email: z
+    .string({ required_error: CLIENT_ERROR_MESSAGES.emailFieldRequired })
+    .email({ message: CLIENT_ERROR_MESSAGES.invalidMail }),
+});
+
+export { registerSchema, loginSchema, resetPasswordSchema, forgotPasswordSchema };

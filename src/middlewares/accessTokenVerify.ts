@@ -7,6 +7,7 @@ import {
   JWT_ACCESS_TOKEN_NAME,
   JWT_REFRESH_SECRET_KEY,
   JWT_REFRESH_TOKEN_NAME,
+  ACCESS_TOKEN_COOKIE_EXPIRE_TIME
 } from "../config/env.js";
 import { setAuthCookie, removeAuthCookie } from "../utils/cookie.js";
 
@@ -29,7 +30,7 @@ const verifyAccessToken = async (req: Request, res: Response, next: NextFunction
 
           const newAccessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
 
-          setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, newAccessToken, "1H");
+          setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, newAccessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
 
           next();
         }
