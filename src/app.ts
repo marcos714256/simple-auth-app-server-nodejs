@@ -6,10 +6,10 @@ import sgMail from "@sendgrid/mail";
 import helmet from "helmet";
 
 import { CLIENT_URL, SENDGRID_API_KEY, PORT } from "./config/env.js";
-import authRoutes from "./routes.js";
+import authRoutes from "./routes/authRoutes.js";
 import connectDB from "./config/db.js";
 import handleError from "./middlewares/errorHandler.js";
-// import verifyAuth from "./middlewares/accessTokenVerify.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -26,12 +26,12 @@ app.use(cookieParser());
 sgMail.setApiKey(SENDGRID_API_KEY);
 app.use(helmet());
 
-app.use("/api", authRoutes);
-// app.use(verifyAuth)
+app.use("/api/user", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use(handleError);
 
 app.all("*", (req: Request, res: Response) => {
-  return res.status(404).json({ message: `Ruta ${req.originalUrl} no encontrada` });
+  return res.status(404).json({ error: `Ruta ${req.originalUrl} no encontrada` });
 });
 
 process.on("uncaughtException", (e) => {

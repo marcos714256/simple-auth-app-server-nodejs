@@ -8,10 +8,10 @@ interface UserTypes {
   _id: string;
 }
 
-interface decodedTokenTypes {
+interface TokenPayloadTypes {
   id: string;
   iat: number;
   exp: number;
 }
 
-export { UserTypes, decodedTokenTypes };
+export { UserTypes, TokenPayloadTypes };

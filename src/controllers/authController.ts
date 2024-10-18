@@ -1,32 +1,30 @@
 import { NextFunction, Request, Response } from "express";
 
-import { JWT_ACCESS_TOKEN_NAME, JWT_REFRESH_TOKEN_NAME } from "../config/env.js";
+import {
+  JWT_ACCESS_SECRET_KEY,
+  JWT_ACCESS_TOKEN_NAME,
+  JWT_REFRESH_SECRET_KEY,
+  JWT_REFRESH_TOKEN_NAME,
+} from "../config/env.js";
 import { CLIENT_SUCCES_MESSAGES } from "../constants.js";
 import { validateUser, registerUser, sendResetLink, resetUserPassword } from "../services/authServices.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import { removeAuthCookie, setAuthCookie } from "../utils/cookie.js";
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password, name } = req.body;
-
   try {
+    const { email, password, name } = req.body;
+
+    if (req.cookies.auth_access_token) removeAuthCookie(res, JWT_ACCESS_TOKEN_NAME);
+    if (req.cookies.auth_refresh_token) removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
+
     const userSaved = await registerUser(email, password, name);
 
-    const accessToken = await generateAccessToken({ id: userSaved._id });
-    const refreshToken = await generateRefreshToken({ id: userSaved._id });
+    const accessToken = await generateAccessToken({ id: userSaved._id }, JWT_ACCESS_SECRET_KEY);
+    const refreshToken = await generateRefreshToken({ id: userSaved._id }, JWT_REFRESH_SECRET_KEY);
 
-    res.cookie(JWT_ACCESS_TOKEN_NAME, accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 1 * 60 * 60 * 1000,
-    });
-
-    res.cookie(JWT_REFRESH_TOKEN_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.registerSuccess });
   } catch (e) {
@@ -38,24 +36,16 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
+    if (req.cookies.auth_access_token) removeAuthCookie(res, JWT_ACCESS_TOKEN_NAME);
+    if (req.cookies.auth_refresh_token) removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
+
     const userFound = await validateUser(email, password);
 
-    const accessToken = await generateAccessToken({ id: userFound._id });
-    const refreshToken = await generateRefreshToken({ id: userFound._id });
+    const accessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
+    const refreshToken = await generateRefreshToken({ id: userFound._id }, JWT_REFRESH_SECRET_KEY);
 
-    res.cookie(JWT_ACCESS_TOKEN_NAME, accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie(JWT_REFRESH_TOKEN_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.loginSuccess });
   } catch (e) {
@@ -65,19 +55,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
 
 const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.cookie(JWT_ACCESS_TOKEN_NAME, "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 0,
-    });
-
-    res.cookie(JWT_REFRESH_TOKEN_NAME, "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 0,
-    });
+    removeAuthCookie(res, JWT_ACCESS_TOKEN_NAME);
+    removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.logoutSuccess });
   } catch (e) {
@@ -104,22 +83,11 @@ const resetPassword = async (req: Request, res: Response, next: NextFunction) =>
 
     const userReset = await resetUserPassword(heeaderToken, newPassword);
 
-    const accessToken = await generateAccessToken({ id: userReset._id });
-    const refreshToken = await generateRefreshToken({ id: userReset._id });
+    const accessToken = await generateAccessToken({ id: userReset._id }, JWT_ACCESS_SECRET_KEY);
+    const refreshToken = await generateRefreshToken({ id: userReset._id }, JWT_REFRESH_SECRET_KEY);
 
-    res.cookie(JWT_ACCESS_TOKEN_NAME, accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie(JWT_REFRESH_TOKEN_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, accessToken, "1h");
+    setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, "7d");
 
     return res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.passwordResetSuccess });
   } catch (e) {

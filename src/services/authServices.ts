@@ -2,14 +2,15 @@ import User from "../userModel.js";
 import { CLIENT_ERROR_MESSAGES } from "../constants.js";
 import { hashPassword, validatePassword } from "../utils/bcrypt.js";
 import { generateAccessToken, validateAccessToken } from "../utils/jwt.js";
-import { IS_GITHUB_REPO, CLIENT_URL, GITHUB_REPO_NAME } from "../config/env.js";
+import { IS_GITHUB_REPO, CLIENT_URL, GITHUB_REPO_NAME, JWT_ACCESS_SECRET_KEY } from "../config/env.js";
 import sgMail from "@sendgrid/mail";
-import { decodedTokenTypes } from "../userInterfaces.js";
+import { UserTypes } from "../userInterfaces.js";
+import AppError from "../utils/appError.js";
 
-const registerUser = async (email: string, password: string, name: string) => {
+const registerUser = async (email: string, password: string, name: string): Promise<UserTypes> => {
   const userFound = await User.findOne({ email });
 
-  if (userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountAlreadyExists);
+  if (userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountAlreadyExists, true, 400);
 
   const passwordHash = await hashPassword(password, 10);
 
@@ -24,14 +25,14 @@ const registerUser = async (email: string, password: string, name: string) => {
   return userSaved;
 };
 
-const validateUser = async (email: string, password: string) => {
+const validateUser = async (email: string, password: string): Promise<UserTypes> => {
   const userFound = await User.findOne({ email });
 
-  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
+  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
 
   const isMatch = await validatePassword(password, userFound.password);
 
-  if (!isMatch) throw new Error(CLIENT_ERROR_MESSAGES.passwordNotMath);
+  if (!isMatch) throw new AppError(CLIENT_ERROR_MESSAGES.incorrectPassword, true, 400);
 
   return userFound;
 };
@@ -41,9 +42,9 @@ const sendResetLink = async (email: string) => {
 
   const userFound = await User.findOne({ email });
 
-  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
+  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
 
-  const accessToken = await generateAccessToken({ id: userFound._id });
+  const accessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
 
   if (IS_GITHUB_REPO) {
     resetLink = `${CLIENT_URL}/${GITHUB_REPO_NAME}/reset-password.html?token=${accessToken}`;
@@ -66,20 +67,20 @@ const sendResetLink = async (email: string) => {
   await sgMail.send(msg);
 };
 
-const resetUserPassword = async (heeaderToken: string, newPassword: string) => {
-  const decoded = (await validateAccessToken(heeaderToken)) as decodedTokenTypes;
+const resetUserPassword = async (heeaderToken: string, newPassword: string): Promise<UserTypes> => {
+  const decoded = await validateAccessToken(heeaderToken, JWT_ACCESS_SECRET_KEY);
 
   const userFound = await User.findById(decoded.id);
 
-  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
+  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
 
   const isMatch = await validatePassword(newPassword, userFound.password);
 
-  if (isMatch) throw new Error(CLIENT_ERROR_MESSAGES.passwordIsMatch);
+  if (isMatch) throw new AppError(CLIENT_ERROR_MESSAGES.passwordIsMatch, true, 400);
 
   const passwordHash = await hashPassword(newPassword, 10);
 
-  const userReset = await User.findByIdAndUpdate(decoded.id, { password: passwordHash }, { new: true });
+  const userReset = (await User.findByIdAndUpdate(decoded.id, { password: passwordHash }, { new: true })) as UserTypes;
 
   return userReset;
 };
