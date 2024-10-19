@@ -6,10 +6,12 @@ import sgMail from "@sendgrid/mail";
 import helmet from "helmet";
 import { connect } from "mongoose";
 
-import { CLIENT_URL, SENDGRID_API_KEY, PORT, DB_URL } from "./config/env.js";
+import { CLIENT_URL, SENDGRID_API_KEY, PORT, DB_URL, NODE_ENV } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import userRoutes from "./routes/userRoutes.js";
+import handleCritialError from "./utils/criticalErrorHandler.js";
+// import { handler } from "./utils/criticalErrorHandler.js";
 
 const app = express();
 
@@ -34,10 +36,8 @@ app.all("*", (req: Request, res: Response) => {
   return res.status(404).json({ error: `Ruta ${req.originalUrl} no encontrada` });
 });
 
-process.on("uncaughtException", (e) => {
-  console.error(e);
-  console.log("Fin del programa.");
-  process.exit(1);
+process.on("uncaughtException", (err) => {
+  handleCritialError(err);
 });
 
 const startServer = async () => {
@@ -46,11 +46,13 @@ const startServer = async () => {
 
     console.log("Connected to DB");
 
+    console.log(NODE_ENV.trim() === "development");
+
     app.listen(PORT, () => {
       console.log("Servidor iniciado");
     });
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    handleCritialError(err);
   }
 };
 

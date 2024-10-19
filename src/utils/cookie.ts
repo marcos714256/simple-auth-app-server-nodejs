@@ -1,11 +1,10 @@
 import { Response } from "express";
+import { NODE_ENV } from "../config/env";
 
 const setAuthCookie = (res: Response, name: string, value: string, maxAge: number) => {
-  console.log("maxAge:", maxAge);
-
   const cookieOptions = {
-    httpOnly: process.env.NODE_ENV !== "development",
-    secure: process.env.NODE_ENV === "development",
+    httpOnly: NODE_ENV.trim() === "production",
+    secure: NODE_ENV.trim() === "production",
     sameSite: false,
     maxAge: maxAge,
   };

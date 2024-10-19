@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "moduleResolution": "Node",
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"]

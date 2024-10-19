@@ -5,12 +5,13 @@ import { generateAccessToken, validateAccessToken } from "../utils/jwt.js";
 import { IS_GITHUB_REPO, CLIENT_URL, GITHUB_REPO_NAME, JWT_ACCESS_SECRET_KEY } from "../config/env.js";
 import sgMail from "@sendgrid/mail";
 import { UserTypes } from "../userInterfaces.js";
-import AppError from "../utils/appError.js";
+// import {AppError} from "../utils/criticalErrorHandler.js";
+// import { MongooseError } from "mongoose";
 
 const registerUser = async (email: string, password: string, name: string): Promise<UserTypes> => {
   const userFound = await User.findOne({ email });
 
-  if (userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountAlreadyExists, true, 400);
+  if (userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountAlreadyExists);
 
   const passwordHash = await hashPassword(password, 10);
 
@@ -28,21 +29,21 @@ const registerUser = async (email: string, password: string, name: string): Prom
 const validateUser = async (email: string, password: string): Promise<UserTypes> => {
   const userFound = await User.findOne({ email });
 
-  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
+  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
 
   const isMatch = await validatePassword(password, userFound.password);
 
-  if (!isMatch) throw new AppError(CLIENT_ERROR_MESSAGES.incorrectPassword, true, 400);
+  if (!isMatch) throw new Error(CLIENT_ERROR_MESSAGES.incorrectPassword);
 
   return userFound;
 };
 
 const sendResetLink = async (email: string) => {
-  let resetLink;
+  let resetLink: string;
 
   const userFound = await User.findOne({ email });
 
-  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
+  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
 
   const accessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
 
@@ -72,11 +73,11 @@ const resetUserPassword = async (heeaderToken: string, newPassword: string): Pro
 
   const userFound = await User.findById(decoded.id);
 
-  if (!userFound) throw new AppError(CLIENT_ERROR_MESSAGES.accountNotFound, true, 404);
+  if (!userFound) throw new Error(CLIENT_ERROR_MESSAGES.accountNotFound);
 
   const isMatch = await validatePassword(newPassword, userFound.password);
 
-  if (isMatch) throw new AppError(CLIENT_ERROR_MESSAGES.passwordIsMatch, true, 400);
+  if (isMatch) throw new Error(CLIENT_ERROR_MESSAGES.passwordIsMatch);
 
   const passwordHash = await hashPassword(newPassword, 10);
 

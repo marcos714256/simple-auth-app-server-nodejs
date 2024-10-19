@@ -7,7 +7,7 @@ import {
   JWT_ACCESS_TOKEN_NAME,
   JWT_REFRESH_SECRET_KEY,
   JWT_REFRESH_TOKEN_NAME,
-  ACCESS_TOKEN_COOKIE_EXPIRE_TIME
+  ACCESS_TOKEN_COOKIE_EXPIRE_TIME,
 } from "../config/env.js";
 import { setAuthCookie, removeAuthCookie } from "../utils/cookie.js";
 
@@ -18,26 +18,32 @@ const verifyAccessToken = async (req: Request, res: Response, next: NextFunction
   try {
     await validateAccessToken(accessToken, JWT_ACCESS_SECRET_KEY);
     next();
-  } catch (e) {
-    if (e instanceof jwt.JsonWebTokenError) {
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
       try {
         const decoded = await validateRefreshToken(refreshToken, JWT_REFRESH_SECRET_KEY);
 
-        if (decoded) {
-          const userFound = await User.findOne({ _id: decoded.id });
+        const userFound = await User.findOne({ _id: decoded.id });
 
-          if (!userFound) return res.status(404).json({ error: "Error de autenticacion, vuelve a iniciar sesion" });
+        if (!userFound) {
+          removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
 
-          const newAccessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
+          res.status(404).json({ error: "Error de autenticacion, vuelve a iniciar sesion" });
 
-          setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, newAccessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
-
-          next();
+          return;
         }
-      } catch (e) {
+
+        const newAccessToken = await generateAccessToken({ id: userFound._id }, JWT_ACCESS_SECRET_KEY);
+
+        setAuthCookie(res, JWT_ACCESS_TOKEN_NAME, newAccessToken, ACCESS_TOKEN_COOKIE_EXPIRE_TIME);
+
+        next();
+      } catch (err) {
         removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
 
         res.status(401).json({ error: "Error de autenticacion, vuelve a iniciar sesion" });
+
+        // next(err)
       }
     }
   }

@@ -5,9 +5,9 @@ const validateData = (schema: ZodSchema) => (req: Request, res: Response, next: 
   try {
     schema.parse(req.body);
     next();
-  } catch (e) {
-    if (e instanceof ZodError) {
-      res.status(400).json({ error: e.errors.map((e) => e.message) });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      res.status(400).json({ error: err.errors.map((err) => err.message) });
     }
   }
 };

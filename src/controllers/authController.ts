@@ -6,8 +6,7 @@ import {
   JWT_REFRESH_SECRET_KEY,
   JWT_REFRESH_TOKEN_NAME,
   REFRESH_TOKEN_COOKIE_EXPIRE_TIME,
-  ACCESS_TOKEN_COOKIE_EXPIRE_TIME
-
+  ACCESS_TOKEN_COOKIE_EXPIRE_TIME,
 } from "../config/env.js";
 import { CLIENT_SUCCES_MESSAGES } from "../constants.js";
 import { validateUser, registerUser, sendResetLink, resetUserPassword } from "../services/authServices.js";
@@ -15,6 +14,7 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { removeAuthCookie, setAuthCookie } from "../utils/cookie.js";
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("register");
   try {
     const { email, password, name } = req.body;
 
@@ -30,8 +30,8 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.registerSuccess });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -51,8 +51,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.loginSuccess });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -62,8 +62,8 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
     removeAuthCookie(res, JWT_REFRESH_TOKEN_NAME);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.logoutSuccess });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -74,8 +74,8 @@ const forgotPassword = async (req: Request, res: Response, next: NextFunction) =
     sendResetLink(email);
 
     res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.linkSent });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -93,8 +93,8 @@ const resetPassword = async (req: Request, res: Response, next: NextFunction) =>
     setAuthCookie(res, JWT_REFRESH_TOKEN_NAME, refreshToken, REFRESH_TOKEN_COOKIE_EXPIRE_TIME);
 
     return res.status(200).json({ message: CLIENT_SUCCES_MESSAGES.passwordResetSuccess });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    next(err);
   }
 };
 
